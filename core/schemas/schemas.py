@@ -1,24 +1,21 @@
 from pydantic import BaseModel, constr
 
 
-class Model(BaseModel):
+class ModelsCreate(BaseModel):
     name: str
 
 
-class Manufacture(BaseModel):
+class ManufacturerCreate(BaseModel):
     name: str
 
 
-class VinCode(BaseModel):
+class VinCodeCreate(BaseModel):
     name: constr(max_length=17, min_length=17)
-    manufacture: Manufacture
-    model: Model
+    manufacturer: int
+    model: int
 
 
 class VinCodeResponse(BaseModel):
     id: int
     manufacturer_id: int
     model_id: int
-
-
-

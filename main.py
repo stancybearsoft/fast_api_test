@@ -1,42 +1,17 @@
-import os
-
 import uvicorn
-from fastapi import FastAPI, Path
+from fastapi import FastAPI
 
-from models.async_db_session import AsyncDatabaseSession
-from models.init_default_data import init_default_data
-from models.pydantic_models import VinCodeResponse
-from models.tabs import VinCodes
-
-app = FastAPI()
-
-database_uri = os.getenv(
-    'DATABASE_URL', 'postgres://postgres:example@localhost:5432/fast_api_test')
-database_uri = database_uri.replace('postgres://', 'postgresql+asyncpg://')
-
-db_session = AsyncDatabaseSession(database_uri)
+from core.models.database import Base, engine
+from api_v1.routers import vin_codes
 
 
-@app.on_event("startup")
-async def startup():
-    await db_session.init()
-    await init_default_data(db_session)
+Base.metadata.create_all(bind=engine)
 
+app = FastAPI(title="Sample FastAPI Application",
+              description="Sample FastAPI Application with Swagger and Sqlalchemy",
+              version="1.0.0", )
 
-@app.on_event("shutdown")
-async def shutdown():
-    await db_session.close()
-
-
-@app.get("/v1/vehicle/get/{vin_code}", response_model=VinCodeResponse)
-async def get_vin_code_info(vin_code: str = Path(default="4Y1SL65848Z411439",
-                                                 description="4Y1SL65848Z411439",
-                                                 min_length=17, max_length=17)):
-    """
-    returns information about vehicle by vin code
-    """
-    result = await VinCodes.get_vin_code_info(session=db_session, vin_code=vin_code)
-    return result
+app.include_router(vin_codes.router, prefix="/v1")
 
 
 if __name__ == "__main__":
